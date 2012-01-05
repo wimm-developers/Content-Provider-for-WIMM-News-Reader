@@ -22,66 +22,68 @@ All content providers implement a common interface for querying the provider and
 
 It's an interface that clients use indirectly, most generally through `ContentResolver` objects. You get a ContentResolver by calling `getContentResolver()` from within the implementation of an Activity or other application component:
 
+```java
     ContentResolver cr = getContentResolver();
-
+```
 You can then use the ContentResolver's methods to interact with News Reader provider, such as `query` method ([official documentation how to query][official]).
 
 #### Code samples
 
 Get active feeds (the ones that the user has selected, and have items):
 
-        Cursor cursor = null;
-        try {
-            final String[] projection = new String[] {News.Feeds._ID, News.Feeds.TITLE,  News.Feeds.FEED_URL, News.Feeds.LAST_UPDATE };
-            cursor = getContentResolver().query(News.Feeds.CONTENT_URI, // URI
-                    projection,     // Which columns to return
-                    News.Feeds.ACTIVE + " = 1",       // Which rows to return
-                    null,       // Where clause parameters
-                    News.Feeds.TITLE + " ASC"        // Order by clause
-                    );
-    
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    int id = cursor.getInt(cursor.getColumnIndex(News.Feeds._ID));
-                    String title = cursor.getString(cursor.getColumnIndex(News.Feeds.TITLE));
+```java
+Cursor cursor = null;
+try {
+    final String[] projection = new String[] {News.Feeds._ID, News.Feeds.TITLE,  News.Feeds.FEED_URL, 
+        News.Feeds.LAST_UPDATE };
+    cursor = getContentResolver().query(News.Feeds.CONTENT_URI, projection, News.Feeds.ACTIVE + " = 1",
+        null, News.Feeds.TITLE + " ASC");
 
-                    // do something
-                } while (cursor.moveToNext());
-            }
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-        
+    if (cursor != null && cursor.moveToFirst()) {
+        do {
+            int id = cursor.getInt(cursor.getColumnIndex(News.Feeds._ID));
+            String title = cursor.getString(cursor.getColumnIndex(News.Feeds.TITLE));
+
+            // do something
+        } while (cursor.moveToNext());
+    }
+} finally {
+    if (cursor != null) {
+        cursor.close();
+    }
+}
+```        
+
 Get items/stories from a specific feed (`feedId`):       
-        
-        Cursor cursor = null;
-        try {
-            // items from feed could also be retrieved querying News.Items filtering the feed id
-            final Uri aFeedUri = ContentUris.withAppendedId(News.Feeds.CONTENT_URI, feedId);
-            final Uri allStoriesUriInFeedUri = Uri.withAppendedPath(aFeedUri, News.TABLE_ITEMS);
-            final String[] projection = new String[] { News.Items._ID, News.Items.TITLE, News.Items.CONTENT,
-                    News.Items.ITEM_URL, News.Items.THUMBNAIL_URL, News.Items.DATE };
-                                        
-            cursor = getContentResolver().query(allStoriesUriInFeedUri, projection, null, null,
-                    News.Items.POSITION + " DESC");
+
+```java        
+Cursor cursor = null;
+try {
+    // items from feed could also be retrieved querying News.Items filtering the feed id
+    final Uri aFeedUri = ContentUris.withAppendedId(News.Feeds.CONTENT_URI, feedId);
+    final Uri allStoriesUriInFeedUri = Uri.withAppendedPath(aFeedUri, News.TABLE_ITEMS);
+    final String[] projection = new String[] { News.Items._ID, News.Items.TITLE, News.Items.CONTENT,
+            News.Items.ITEM_URL, News.Items.THUMBNAIL_URL, News.Items.DATE };
+                                
+    cursor = getContentResolver().query(allStoriesUriInFeedUri, projection, null, null,
+            News.Items.POSITION + " DESC");
+    
+    if (cursor != null && cursor.moveToFirst()) {
+        do {
             
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    
-                    String title = cursor.getString(cursor.getColumnIndex(News.Items.TITLE));
-                    Date date = new Date(cursor.getLong(cursor.getColumnIndex(News.Items.DATE)));
-                    
-                    // do something
-                } while (cursor.moveToNext());
-            }
-            return result;
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
+            String title = cursor.getString(cursor.getColumnIndex(News.Items.TITLE));
+            Date date = new Date(cursor.getLong(cursor.getColumnIndex(News.Items.DATE)));
+            
+            // do something
+        } while (cursor.moveToNext());
+    }
+    return result;
+} finally {
+    if (cursor != null) {
+        cursor.close();
+    }
+}
+```
 
 ### URIs (not needed to use the provider)
 
